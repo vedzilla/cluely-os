@@ -10,7 +10,7 @@ export interface CaptureResult {
 }
 
 // ── AI Provider ──────────────────────────────────────────
-export type AIProviderType = 'openai' | 'ollama';
+export type AIProviderType = 'openai' | 'anthropic' | 'ollama';
 
 export interface AIProviderConfig {
   type: AIProviderType;
@@ -56,6 +56,7 @@ export interface AppSettings {
   globalHotkey: string;
   theme: 'light' | 'dark';
   localOnlyMode: boolean;
+  stealthMode: boolean;        // hide the window from screen capture / screen sharing
   allowlist: string[];
   blocklist: string[];
 }
@@ -82,6 +83,7 @@ export const IPC = {
   DB_DELETE_CAPTURES: 'db:delete-captures',
   WINDOW_TOGGLE: 'window:toggle',
   WINDOW_MINIMIZE: 'window:minimize',
+  WINDOW_RESIZE: 'window:resize',
   APP_STATUS: 'app:status',
 } as const;
 

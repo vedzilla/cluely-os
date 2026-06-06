@@ -1,8 +1,8 @@
 import { useAppStore } from '../stores/appStore';
-import { Eye, Send, X, Globe, HardDrive, AlertTriangle } from 'lucide-react';
+import { Eye, ArrowUp, X, Globe, HardDrive, AlertTriangle } from 'lucide-react';
 
 export default function ContextTransparencyPanel() {
-  const { contextPayload, setContextPayload, setContextApproved, sendMessage, lastCapture } = useAppStore();
+  const { contextPayload, setContextPayload, setContextApproved, sendMessage } = useAppStore();
 
   if (!contextPayload) return null;
 
@@ -18,85 +18,91 @@ export default function ContextTransparencyPanel() {
   };
 
   return (
-    <div className="border-b border-yellow-500/30 bg-yellow-500/5 p-3 space-y-3 max-h-[50vh] overflow-y-auto">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-yellow-400 text-sm font-medium">
-          <Eye size={16} />
-          Context Transparency Panel
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="drag flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
+        <div className="no-drag flex items-center gap-2 text-[13px] font-semibold text-amber-300">
+          <Eye size={15} />
+          Review context
         </div>
-        <button onClick={handleDiscard} className="p-1 rounded hover:bg-surface-700/50 text-surface-200">
-          <X size={14} />
+        <button
+          onClick={handleDiscard}
+          className="no-drag flex h-7 w-7 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white/90"
+        >
+          <X size={15} />
         </button>
       </div>
 
-      <div className="text-xs text-surface-200/70 flex items-center gap-1">
-        <AlertTriangle size={12} className="text-yellow-400" />
-        Review what will be sent to AI before proceeding
-      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+        <div className="flex items-center gap-1.5 text-[11px] text-white/55">
+          <AlertTriangle size={12} className="text-amber-400" />
+          Review exactly what will be sent before it leaves your machine.
+        </div>
 
-      {/* Screenshot preview */}
-      {contextPayload.screenshotPreview && (
+        {contextPayload.screenshotPreview && (
+          <div className="space-y-1">
+            <div className="text-[10px] font-medium uppercase tracking-wide text-white/40">Screenshot</div>
+            <img
+              src={contextPayload.screenshotPreview}
+              alt="Captured screen"
+              className="max-h-36 w-full rounded-lg border border-white/10 bg-black object-contain"
+            />
+          </div>
+        )}
+
         <div className="space-y-1">
-          <div className="text-xs text-surface-200/50 font-medium">Screenshot Preview</div>
-          <img
-            src={contextPayload.screenshotPreview}
-            alt="Captured screen"
-            className="w-full rounded border border-surface-700/50 max-h-32 object-contain bg-black"
-          />
+          <div className="text-[10px] font-medium uppercase tracking-wide text-white/40">
+            Extracted text ({contextPayload.capturedText.length} chars)
+          </div>
+          <div
+            data-selectable
+            className="max-h-28 overflow-y-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-black/30 p-2.5 font-mono text-[11px] leading-relaxed text-white/70"
+          >
+            {contextPayload.capturedText || '(no text extracted)'}
+          </div>
         </div>
-      )}
 
-      {/* Extracted text */}
-      <div className="space-y-1">
-        <div className="text-xs text-surface-200/50 font-medium">Extracted Text ({contextPayload.capturedText.length} chars)</div>
-        <div className="bg-surface-800/80 rounded p-2 text-xs text-surface-200 max-h-24 overflow-y-auto font-mono whitespace-pre-wrap">
-          {contextPayload.capturedText || '(no text extracted)'}
-        </div>
-      </div>
-
-      {/* Metadata */}
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="bg-surface-800/50 rounded p-2">
-          <div className="text-surface-200/50">Model</div>
-          <div className="text-white font-medium">{contextPayload.model}</div>
-        </div>
-        <div className="bg-surface-800/50 rounded p-2">
-          <div className="text-surface-200/50">Est. Tokens</div>
-          <div className="text-white font-medium">~{contextPayload.estimatedTokens}</div>
-        </div>
-        <div className="bg-surface-800/50 rounded p-2 col-span-2">
-          <div className="text-surface-200/50">Data Destination</div>
-          <div className="flex items-center gap-1.5 text-white font-medium">
-            {contextPayload.isLocal ? (
-              <>
-                <HardDrive size={12} className="text-green-400" />
-                Local (Ollama) — data stays on your machine
-              </>
-            ) : (
-              <>
-                <Globe size={12} className="text-blue-400" />
-                Cloud ({contextPayload.providerType}) — sent via API
-              </>
-            )}
+        <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+            <div className="text-white/40">Model</div>
+            <div className="font-medium text-white/90">{contextPayload.model}</div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+            <div className="text-white/40">Est. Tokens</div>
+            <div className="font-medium text-white/90">~{contextPayload.estimatedTokens}</div>
+          </div>
+          <div className="col-span-2 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+            <div className="text-white/40">Data Destination</div>
+            <div className="flex items-center gap-1.5 font-medium text-white/90">
+              {contextPayload.isLocal ? (
+                <>
+                  <HardDrive size={12} className="text-emerald-400" />
+                  Local (Ollama) — stays on your machine
+                </>
+              ) : (
+                <>
+                  <Globe size={12} className="text-sky-400" />
+                  Cloud ({contextPayload.providerType}) — sent via API
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2">
+      {/* Actions */}
+      <div className="flex gap-2 border-t border-white/[0.07] p-3">
         <button
           onClick={handleDiscard}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-surface-700/50 text-surface-200 hover:bg-surface-700 transition-colors text-sm"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-[13px] text-white/70 transition-colors hover:bg-white/10"
         >
-          <X size={14} />
-          Discard
+          <X size={14} /> Discard
         </button>
         <button
           onClick={handleSendToAI}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-accent-500 text-white hover:bg-accent-600 transition-colors text-sm font-medium"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/90 px-3 py-2 text-[13px] font-medium text-black transition-colors hover:bg-white"
         >
-          <Send size={14} />
-          Send to AI
+          <ArrowUp size={14} strokeWidth={2.5} /> Send to AI
         </button>
       </div>
     </div>

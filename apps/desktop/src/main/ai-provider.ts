@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk';
 import type { AIProviderConfig } from '@copilot/shared';
 
 interface ChatCompletionMessage {
@@ -9,6 +10,12 @@ export async function* handleAIChat(
   messages: ChatCompletionMessage[],
   config: AIProviderConfig
 ): AsyncGenerator<string> {
+  // Anthropic (Claude) uses the official SDK and its own Messages API.
+  if (config.type === 'anthropic') {
+    yield* handleAnthropicChat(messages, config);
+    return;
+  }
+
   const isOllama = config.type === 'ollama';
   const baseUrl = config.baseUrl.replace(/\/+$/, '');
 
@@ -91,6 +98,37 @@ export async function* handleAIChat(
           // skip malformed lines
         }
       }
+    }
+  }
+}
+
+async function* handleAnthropicChat(
+  messages: ChatCompletionMessage[],
+  config: AIProviderConfig
+): AsyncGenerator<string> {
+  const client = new Anthropic({ apiKey: config.apiKey });
+
+  // Claude takes the system prompt as a top-level field, not a message role.
+  const systemText = messages
+    .filter((m) => m.role === 'system')
+    .map((m) => m.content)
+    .join('\n\n');
+
+  const convo = messages
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+
+  const stream = client.messages.stream({
+    model: config.model,
+    max_tokens: 8192,
+    ...(systemText ? { system: systemText } : {}),
+    messages: convo,
+    thinking: { type: 'adaptive' },
+  });
+
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      yield event.delta.text;
     }
   }
 }

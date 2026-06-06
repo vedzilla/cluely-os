@@ -2,61 +2,60 @@ import { useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
 import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
-import { MessageSquare } from 'lucide-react';
+import PanelHeader from '../components/PanelHeader';
+import { Sparkles, Camera } from 'lucide-react';
 
 export default function ChatPage() {
-  const { messages, isStreaming, currentSessionId, createNewSession } = useAppStore();
+  const { messages, isStreaming, settings, captureScreen } = useAppStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
+  const isLocal = settings.provider.type === 'ollama';
+  const subtitle = `${isLocal ? 'Local' : 'Cloud'} · ${settings.provider.model}`;
+
   return (
-    <div className="flex flex-col h-full">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
+    <div className="flex h-full flex-col">
+      <PanelHeader icon={Sparkles} title="Ask AI" subtitle={subtitle} />
+
+      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
-            <div className="w-16 h-16 rounded-2xl bg-accent-500/10 flex items-center justify-center">
-              <MessageSquare size={28} className="text-accent-400" />
+          <div className="flex h-full flex-col items-center justify-center space-y-5 px-6 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06]">
+              <Sparkles size={24} className="text-white/70" />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">Cluely OS</h2>
-              <p className="text-sm text-surface-200/60 mt-1 max-w-[280px]">
-                Privacy-first AI copilot. Capture your screen, review what's sent, and get AI assistance — all under your control.
+            <div className="space-y-1.5">
+              <h2 className="text-[15px] font-semibold text-white/95">What can I help with?</h2>
+              <p className="max-w-[300px] text-[12px] leading-relaxed text-white/45">
+                Ask anything, or capture your screen and I'll analyze what's on it — you review
+                exactly what's sent before it leaves your machine.
               </p>
             </div>
-            <div className="space-y-2 text-xs text-surface-200/50">
-              <p>1. Click <strong className="text-accent-400">Capture Screen</strong> to grab your screen</p>
-              <p>2. Review the context in the <strong className="text-yellow-400">Transparency Panel</strong></p>
-              <p>3. Choose an action: Analyze, Summarize, Explain, or Draft</p>
-              <p>4. Or just type a question below</p>
-            </div>
-            {!currentSessionId && (
-              <button
-                onClick={() => createNewSession()}
-                className="px-4 py-2 rounded-lg bg-accent-500/20 text-accent-400 hover:bg-accent-500/30 transition-colors text-sm"
-              >
-                Start New Session
-              </button>
-            )}
+            <button
+              onClick={() => captureScreen()}
+              className="flex items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-[12px] text-white/80 transition-colors hover:bg-white/10"
+            >
+              <Camera size={13} /> Capture screen
+            </button>
           </div>
         ) : (
           messages.map((msg) => <ChatBubble key={msg.id} message={msg} />)
         )}
+
         {isStreaming && (
-          <div className="flex items-center gap-2 text-xs text-surface-200/50">
+          <div className="flex items-center gap-2 text-[11px] text-white/40">
             <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-1.5 h-1.5 bg-accent-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/50" style={{ animationDelay: '0ms' }} />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/50" style={{ animationDelay: '150ms' }} />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/50" style={{ animationDelay: '300ms' }} />
             </div>
-            AI is thinking...
+            Thinking…
           </div>
         )}
       </div>
+
       <ChatInput />
     </div>
   );

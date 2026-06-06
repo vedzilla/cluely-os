@@ -10,6 +10,16 @@ interface AppState {
   page: Page;
   setPage: (page: Page) => void;
 
+  // Panel (the surface that drops below the command bar)
+  panelOpen: boolean;
+  openPanel: (page?: Page) => void;
+  closePanel: () => void;
+  togglePanel: (page: Page) => void;
+
+  // "Ask AI" — bumps a counter the chat input watches to grab focus.
+  askSeq: number;
+  focusAsk: () => void;
+
   // Settings
   settings: AppSettings;
   loadSettings: () => Promise<void>;
@@ -56,6 +66,15 @@ function estimateTokens(text: string): number {
 export const useAppStore = create<AppState>((set, get) => ({
   page: 'chat',
   setPage: (page) => set({ page }),
+
+  panelOpen: false,
+  openPanel: (page) => set((s) => ({ panelOpen: true, page: page ?? s.page })),
+  closePanel: () => set({ panelOpen: false }),
+  togglePanel: (page) =>
+    set((s) => (s.panelOpen && s.page === page ? { panelOpen: false } : { panelOpen: true, page })),
+
+  askSeq: 0,
+  focusAsk: () => set((s) => ({ panelOpen: true, page: 'chat', askSeq: s.askSeq + 1 })),
 
   settings: { ...DEFAULT_SETTINGS },
   loadSettings: async () => {
@@ -249,6 +268,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       isLocal: settings.provider.type === 'ollama',
       userPrompt: prompts[action],
     };
-    set({ contextPayload: payload, contextApproved: false, page: 'chat' });
+    set({ contextPayload: payload, contextApproved: false, page: 'chat', panelOpen: true });
   },
 }));
