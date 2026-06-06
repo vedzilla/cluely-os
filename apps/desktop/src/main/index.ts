@@ -1,7 +1,8 @@
-import { app, BrowserWindow, globalShortcut, ipcMain, desktopCapturer, screen, Tray, Menu, nativeImage } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, desktopCapturer, screen, session, Tray, Menu, nativeImage } from 'electron';
 import path from 'node:path';
 import { initDatabase, getDatabase } from './database';
 import { handleAIChat } from './ai-provider';
+import { transcribeChunk } from './transcribe';
 import { performOCR } from './ocr';
 import { IPC } from '@copilot/shared';
 import type { AppSettings, CaptureResult } from '@copilot/shared';
@@ -249,6 +250,26 @@ function setupIPC() {
     return true;
   });
 
+  // Audio transcription (OpenAI Whisper) — one short chunk at a time
+  ipcMain.handle(
+    IPC.AUDIO_TRANSCRIBE,
+    async (_event, { audio, mimeType }: { audio: Uint8Array; mimeType: string }) => {
+      try {
+        // Use the dedicated transcription key if set; otherwise fall back to the
+        // chat provider's key when that provider is OpenAI — so a single OpenAI
+        // key can power both chat and Whisper.
+        const key =
+          currentSettings.transcriptionApiKey ||
+          (currentSettings.provider.type === 'openai' ? currentSettings.provider.apiKey ?? '' : '');
+        const text = await transcribeChunk(audio, mimeType, key, currentSettings.transcriptionModel);
+        return { success: true, text };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        return { success: false, error: message };
+      }
+    }
+  );
+
   // Window controls
   ipcMain.on(IPC.WINDOW_TOGGLE, () => toggleWindow());
   ipcMain.on(IPC.WINDOW_MINIMIZE, () => mainWindow?.minimize());
@@ -263,6 +284,18 @@ function setupIPC() {
 
 app.whenReady().then(() => {
   initDatabase();
+
+  // Allow the renderer's getDisplayMedia() to capture the screen + system audio
+  // (macOS uses ScreenCaptureKit loopback). Without a handler, getDisplayMedia rejects.
+  session.defaultSession.setDisplayMediaRequestHandler(
+    (_request, callback) => {
+      desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+        callback(sources.length ? { video: sources[0], audio: 'loopback' } : {});
+      });
+    },
+    { useSystemPicker: false }
+  );
+
   createWindow();
   createTray();
   registerGlobalHotkey();

@@ -172,6 +172,42 @@ export default function SettingsPage() {
           </label>
         </section>
 
+        {/* Audio / Transcription */}
+        <section className="space-y-2.5">
+          <h3 className={sectionCls}>Audio (Transcription)</h3>
+          <p className="text-[11px] leading-relaxed text-white/45">
+            "Listen" transcribes your mic + system audio with OpenAI Whisper (OpenAI-only — Claude
+            can't transcribe audio).{' '}
+            {draft.provider.type === 'openai'
+              ? 'Leave this blank to reuse your OpenAI chat key above — one key covers everything.'
+              : 'Add an OpenAI key here, or switch your chat provider to OpenAI to use a single key for both.'}
+          </p>
+          <label className="block">
+            <span className={labelCls}>OpenAI API Key {draft.provider.type === 'openai' ? '(optional)' : ''}</span>
+            <input
+              type="password"
+              value={draft.transcriptionApiKey}
+              onChange={(e) => setDraft({ ...draft, transcriptionApiKey: e.target.value })}
+              placeholder={draft.provider.type === 'openai' ? 'Reusing your OpenAI chat key' : 'sk-...'}
+              className={inputCls}
+            />
+          </label>
+          <label className="block">
+            <span className={labelCls}>Transcription Model</span>
+            <select
+              value={draft.transcriptionModel}
+              onChange={(e) => setDraft({ ...draft, transcriptionModel: e.target.value })}
+              className={inputCls}
+            >
+              {['whisper-1', 'gpt-4o-mini-transcribe', 'gpt-4o-transcribe'].map((m) => (
+                <option key={m} value={m} className="bg-neutral-900">
+                  {m}
+                </option>
+              ))}
+            </select>
+          </label>
+        </section>
+
         {/* Capture */}
         <section className="space-y-2.5">
           <h3 className={sectionCls}>Capture</h3>

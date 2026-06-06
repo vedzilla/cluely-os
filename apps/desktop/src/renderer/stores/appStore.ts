@@ -1,9 +1,19 @@
 import { create } from 'zustand';
-import type { AppSettings, CaptureResult, CaptureStatus, ChatMessage, ContextPayload } from '@copilot/shared';
+import type {
+  AppSettings,
+  CaptureResult,
+  CaptureStatus,
+  ChatMessage,
+  ContextPayload,
+  TranscriptSegment,
+} from '@copilot/shared';
 import { DEFAULT_SETTINGS } from '@copilot/shared';
 import { v4 as uuid } from 'uuid';
 
 type Page = 'chat' | 'privacy' | 'settings' | 'sessions';
+
+// Held outside the store (not serializable): tears down the active audio capture.
+let captureStop: (() => void) | null = null;
 
 interface AppState {
   // Navigation
@@ -53,6 +63,15 @@ interface AppState {
   createNewSession: (title?: string) => Promise<string>;
   deleteSession: (id: string) => Promise<void>;
   loadSession: (id: string) => Promise<void>;
+
+  // Audio transcription ("Listen")
+  listening: boolean;
+  transcript: TranscriptSegment[];
+  audioError: string | null;
+  startListening: () => Promise<void>;
+  stopListening: () => void;
+  clearTranscript: () => void;
+  askAboutTranscript: () => Promise<void>;
 
   // Send message to AI
   sendMessage: (content: string) => Promise<void>;
@@ -158,6 +177,40 @@ export const useAppStore = create<AppState>((set, get) => ({
       tokenCount: m.token_count ?? undefined,
     }));
     set({ currentSessionId: id, messages: msgs, lastCapture: null, contextPayload: null, contextApproved: false });
+  },
+
+  listening: false,
+  transcript: [],
+  audioError: null,
+  startListening: async () => {
+    if (get().listening) return;
+    set({ listening: true, audioError: null });
+    const { startCapture } = await import('../lib/audioCapture');
+    captureStop = await startCapture({
+      sources: ['mic', 'system'],
+      onSegment: ({ source, text }) => {
+        if (!text.trim()) return;
+        set((s) => ({
+          transcript: [...s.transcript, { id: uuid(), source, text, timestamp: Date.now() }],
+        }));
+      },
+      onError: (message) => set({ audioError: message }),
+    });
+  },
+  stopListening: () => {
+    captureStop?.();
+    captureStop = null;
+    set({ listening: false });
+  },
+  clearTranscript: () => set({ transcript: [], audioError: null }),
+  askAboutTranscript: async () => {
+    const lines = get()
+      .transcript.map((s) => `${s.source === 'mic' ? 'Me' : 'Them'}: ${s.text}`)
+      .join('\n');
+    if (!lines.trim()) return;
+    set({ panelOpen: true, page: 'chat' });
+    const content = `Here is a live transcript of a conversation. Summarize the key points and suggest a helpful response or next step.\n\n---\n${lines}\n---`;
+    await get().sendMessage(content);
   },
 
   sendMessage: async (content) => {

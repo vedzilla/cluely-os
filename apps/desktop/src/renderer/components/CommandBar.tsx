@@ -62,15 +62,17 @@ const TABS = [
 ];
 
 export default function CommandBar() {
-  const { page, panelOpen, togglePanel, focusAsk, currentSessionId, createNewSession, settings } =
+  const { page, panelOpen, togglePanel, focusAsk, openPanel, listening, startListening, stopListening, settings } =
     useAppStore();
 
-  const [listening, setListening] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
-  // Tick the session timer while "listening".
+  // Tick the elapsed timer while listening.
   useEffect(() => {
-    if (!listening) return;
+    if (!listening) {
+      setSeconds(0);
+      return;
+    }
     const id = window.setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => window.clearInterval(id);
   }, [listening]);
@@ -89,13 +91,11 @@ export default function CommandBar() {
 
   const toggleListen = async () => {
     if (listening) {
-      setListening(false);
-      setSeconds(0);
+      stopListening();
       return;
     }
-    if (!currentSessionId) await createNewSession();
-    setSeconds(0);
-    setListening(true);
+    openPanel('chat');
+    await startListening();
   };
 
   const hideParts = hotkeyParts(settings.globalHotkey || 'CommandOrControl+Shift+Space');

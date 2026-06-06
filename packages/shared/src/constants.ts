@@ -14,6 +14,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   localOnlyMode: false,
   stealthMode: true,
+  transcriptionApiKey: '',
+  transcriptionModel: 'whisper-1',
   allowlist: [],
   blocklist: [],
 };
