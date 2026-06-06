@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cluely OS — Privacy-First AI Copilot for Your Desktop</title>
+  <meta name="description" content="An open-source, privacy-first desktop AI copilot. Capture your screen, get intelligent assistance, and stay in control of your data." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 800: '#3730a3', 900: '#312e81' },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); }
+    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    .glow { box-shadow: 0 0 60px rgba(99, 102, 241, 0.3); }
+    @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    .float { animation: float 6s ease-in-out infinite; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp 0.8s ease forwards; }
+    .fade-up-delay { animation: fadeUp 0.8s ease 0.2s forwards; opacity: 0; }
+    .fade-up-delay-2 { animation: fadeUp 0.8s ease 0.4s forwards; opacity: 0; }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen text-white antialiased">
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 glass">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <span class="text-lg font-bold">Cluely OS</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#features" class="text-gray-300 hover:text-white transition-colors text-sm">Features</a>
+        <a href="#privacy" class="text-gray-300 hover:text-white transition-colors text-sm">Privacy</a>
+        <a href="#open-source" class="text-gray-300 hover:text-white transition-colors text-sm">Open Source</a>
+        <a href="https://github.com/vedzilla/cluely-os" target="_blank" class="text-gray-300 hover:text-white transition-colors text-sm flex items-center gap-1">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+      <a href="#waitlist" class="bg-brand-500 hover:bg-brand-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        Join Waitlist
+      </a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="pt-32 pb-20 px-6">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="fade-up">
+        <div class="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-8">
+          <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+          <span class="text-sm text-gray-300">Open Source & Privacy-First</span>
+        </div>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 fade-up">
+        Your Screen.<br/>
+        <span class="bg-gradient-to-r from-brand-400 to-purple-400 bg-clip-text text-transparent">Your AI Copilot.</span><br/>
+        Your Control.
+      </h1>
+      <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10 fade-up-delay">
+        Cluely OS captures your screen, extracts context, and gives you intelligent AI assistance — all running locally, all under your control. No hidden data collection. Ever.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 fade-up-delay-2">
+        <a href="#waitlist" class="bg-brand-500 hover:bg-brand-600 px-8 py-4 rounded-xl text-lg font-semibold transition-all hover:scale-105 glow">
+          Get Early Access
+        </a>
+        <a href="https://github.com/vedzilla/cluely-os" target="_blank" class="glass px-8 py-4 rounded-xl text-lg font-semibold transition-all hover:scale-105 hover:bg-white/10">
+          View on GitHub
+        </a>
+      </div>
+    </div>
+
+    <!-- App Preview -->
+    <div class="max-w-4xl mx-auto mt-16 float">
+      <div class="glass rounded-2xl p-1 glow">
+        <div class="bg-slate-900 rounded-xl overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+            <span class="ml-3 text-sm text-gray-400">Cluely OS — AI Assistant</span>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-brand-500/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-white">Screen captured</p>
+                <p class="text-xs text-gray-400">Extracted 342 words from active window</p>
+              </div>
+              <span class="ml-auto text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">Local Only</span>
+            </div>
+            <div class="glass rounded-lg p-4">
+              <p class="text-sm text-gray-300">Based on the captured content, here's a summary of the pull request discussion...</p>
+              <div class="mt-3 flex gap-2">
+                <span class="text-xs bg-brand-500/20 text-brand-300 px-2 py-1 rounded">Analyze</span>
+                <span class="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">Summarize</span>
+                <span class="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded">Explain</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-gray-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span>Context Transparency: You approved this data before sending</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-bold mb-4">Everything you need.<br/>Nothing you don't.</h2>
+        <p class="text-gray-400 text-lg">Powerful AI assistance with complete transparency.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass rounded-xl p-6 hover:bg-white/10 transition-colors">
+          <div class="w-12 h-12 rounded-lg bg-brand-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Smart Screen Capture</h3>
+          <p class="text-gray-400 text-sm">Capture your screen with one click. OCR extracts text automatically — no screenshots leave your machine without explicit approval.</p>
+        </div>
+        <div class="glass rounded-xl p-6 hover:bg-white/10 transition-colors">
+          <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">AI Chat Interface</h3>
+          <p class="text-gray-400 text-sm">Ask questions, get summaries, draft responses. Streaming AI with support for OpenAI, Anthropic, or fully local Ollama models.</p>
+        </div>
+        <div class="glass rounded-xl p-6 hover:bg-white/10 transition-colors">
+          <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Context Transparency</h3>
+          <p class="text-gray-400 text-sm">See exactly what data is captured, what will be sent to AI, and approve every request. Full control over your context.</p>
+        </div>
+        <div class="glass rounded-xl p-6 hover:bg-white/10 transition-colors">
+          <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Privacy Dashboard</h3>
+          <p class="text-gray-400 text-sm">Pause capture, delete all data, toggle screenshot storage. Your data stays on your machine unless you explicitly choose cloud.</p>
+        </div>
+        <div class="glass rounded-xl p-6 hover:bg-white/10 transition-colors">
+          <div class="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Local Storage</h3>
+          <p class="text-gray-400 text-sm">SQLite database stores sessions and messages locally. No cloud sync. No telemetry. Export or delete your data anytime.</p>
+        </div>
+        <div class="glass rounded-xl p-6 hover:bg-white/10 transition-colors">
+          <div class="w-12 h-12 rounded-lg bg-pink-500/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Open Source</h3>
+          <p class="text-gray-400 text-sm">Every line of code is auditable. Self-host, modify, contribute. Built for transparency and community trust.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy Section -->
+  <section id="privacy" class="py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="glass rounded-2xl p-8 md:p-12">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h2 class="text-3xl font-bold">Privacy by Design</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <p class="text-gray-300 text-sm">All data stored locally on your machine</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <p class="text-gray-300 text-sm">Screenshots discarded after OCR extraction</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <p class="text-gray-300 text-sm">Explicit approval required before cloud AI</p>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <p class="text-gray-300 text-sm">No analytics, tracking, or telemetry</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <p class="text-gray-300 text-sm">100% offline mode with Ollama</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <p class="text-gray-300 text-sm">Delete all data with one click</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Open Source Section -->
+  <section id="open-source" class="py-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl md:text-5xl font-bold mb-6">Built in the Open</h2>
+      <p class="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
+        We believe AI tools should be transparent. Every line of code is open source, auditable, and community-driven.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a href="https://github.com/vedzilla/cluely-os" target="_blank" class="glass px-6 py-3 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          Star on GitHub
+        </a>
+        <a href="https://github.com/vedzilla/cluely-os/issues" target="_blank" class="glass px-6 py-3 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Report Issues
+        </a>
+        <a href="https://github.com/vedzilla/cluely-os/pulls" target="_blank" class="glass px-6 py-3 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+          Contribute
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Waitlist Section -->
+  <section id="waitlist" class="py-20 px-6">
+    <div class="max-w-xl mx-auto">
+      <div class="glass rounded-2xl p-8 md:p-12 text-center">
+        <h2 class="text-3xl font-bold mb-4">Get Early Access</h2>
+        <p class="text-gray-400 mb-8">Be the first to know when Cluely OS is ready for download. No spam, just launch updates.</p>
+        <form id="waitlist-form" class="space-y-4">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input
+              type="text"
+              id="name-input"
+              placeholder="Your name"
+              required
+              class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            />
+            <input
+              type="email"
+              id="email-input"
+              placeholder="you@example.com"
+              required
+              class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-brand-500 hover:bg-brand-600 px-6 py-3 rounded-lg font-semibold transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Join the Waitlist
+          </button>
+          <p id="form-message" class="text-sm hidden"></p>
+        </form>
+        <p class="text-xs text-gray-500 mt-4">We respect your privacy. Unsubscribe anytime.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10 py-12 px-6">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded bg-brand-500 flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <span class="text-sm text-gray-400">Cluely OS &copy; 2025. Open Source under MIT License.</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="https://github.com/vedzilla/cluely-os" target="_blank" class="text-gray-400 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:8000'
+      : '';
+
+    document.getElementById('waitlist-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const msg = document.getElementById('form-message');
+      const name = document.getElementById('name-input').value.trim();
+      const email = document.getElementById('email-input').value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Joining...';
+      msg.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/waitlist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.textContent = data.message || 'You\'re on the list! We\'ll notify you when Cluely OS launches.';
+          msg.className = 'text-sm text-green-400';
+          btn.textContent = 'You\'re In!';
+          document.getElementById('name-input').value = '';
+          document.getElementById('email-input').value = '';
+        } else {
+          msg.textContent = data.detail || 'Something went wrong. Please try again.';
+          msg.className = 'text-sm text-red-400';
+          btn.disabled = false;
+          btn.textContent = 'Join the Waitlist';
+        }
+      } catch (err) {
+        msg.textContent = 'Network error. Please try again later.';
+        msg.className = 'text-sm text-red-400';
+        btn.disabled = false;
+        btn.textContent = 'Join the Waitlist';
+      }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+</body>
+</html>
