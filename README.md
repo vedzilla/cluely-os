@@ -96,10 +96,26 @@ Default: `Ctrl+Shift+Space` (configurable in Settings)
 │       │   ├── stores/      # Zustand state management
 │       │   └── styles/      # Tailwind CSS
 │       └── preload/         # Electron preload (IPC bridge)
+├── apps/web/                # Next.js account dashboard (history, context, settings)
 ├── packages/shared/         # Shared types, constants, IPC channels
 ├── docs/                    # Documentation
 └── .env.example             # Environment template
 ```
+
+## Web Dashboard
+
+A Next.js (App Router) dashboard lives in `apps/web` — a light, elegant companion to the
+desktop overlay for reviewing session history + transcripts, editing your personal context,
+and managing settings.
+
+```bash
+npm run dev:web      # http://localhost:3001
+npm run build:web
+```
+
+Local-first note: the dashboard shows sample data by default. Syncing real sessions/transcripts
+from the desktop app is **opt-in** (Settings → Cloud sync), so nothing leaves your machine unless
+you turn it on. Deploys cleanly to Vercel.
 
 ## Privacy & Security
 

@@ -5,7 +5,9 @@
   "description": "Privacy-first desktop AI copilot with screen capture and context-aware assistance",
   "scripts": {
     "dev": "npm run dev --workspace=apps/desktop",
+    "dev:web": "npm run dev --workspace=apps/web",
     "build": "npm run build --workspace=apps/desktop",
+    "build:web": "npm run build --workspace=apps/web",
     "lint": "npm run lint --workspace=apps/desktop",
     "typecheck": "npm run typecheck --workspace=apps/desktop"
   },
