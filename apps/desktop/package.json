@@ -2,7 +2,6 @@
   "name": "cluely-os",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "main": "dist-electron/main/index.js",
   "scripts": {
     "dev": "vite",
