@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '../stores/appStore';
+import Logo from './Logo';
 import {
   AudioLines,
   MessageSquare,
@@ -103,6 +104,11 @@ export default function CommandBar() {
   return (
     <div className="drag flex w-full justify-center pt-2.5">
       <div className="animate-bar-in no-drag inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/60 px-2 py-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+        {/* Brand */}
+        <div className="flex items-center pl-1 pr-1.5">
+          <Logo size={17} />
+        </div>
+
         {/* Listen */}
         <button
           onClick={toggleListen}

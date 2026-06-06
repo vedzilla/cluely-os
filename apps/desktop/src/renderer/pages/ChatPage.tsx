@@ -3,7 +3,8 @@ import { useAppStore } from '../stores/appStore';
 import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
 import PanelHeader from '../components/PanelHeader';
-import { Sparkles, Camera, AlertTriangle, Trash2 } from 'lucide-react';
+import { Camera, AlertTriangle, Trash2 } from 'lucide-react';
+import Logo from '../components/Logo';
 
 export default function ChatPage() {
   const {
@@ -33,7 +34,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <PanelHeader icon={Sparkles} title="Ask AI" subtitle={subtitle} />
+      <PanelHeader icon={Logo} title="Ask AI" subtitle={subtitle} />
 
       {(listening || transcript.length > 0 || audioError) && (
         <div className="border-b border-white/[0.07] bg-white/[0.02]">
@@ -89,7 +90,7 @@ export default function ChatPage() {
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center space-y-5 px-6 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.06]">
-              <Sparkles size={24} className="text-white/70" />
+              <Logo size={30} />
             </div>
             <div className="space-y-1.5">
               <h2 className="text-[15px] font-semibold text-white/95">What can I help with?</h2>
