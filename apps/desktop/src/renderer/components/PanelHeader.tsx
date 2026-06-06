@@ -1,9 +1,11 @@
 import { X } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
 
+// Accepts both lucide icons and our custom Logo (both take size + className).
+type IconComponent = React.ComponentType<{ size?: number | string; className?: string }>;
+
 interface Props {
-  icon?: LucideIcon;
+  icon?: IconComponent;
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
