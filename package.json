@@ -1,0 +1,16 @@
+{
+  "name": "desktop-ai-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Privacy-first desktop AI copilot with screen capture and context-aware assistance",
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/desktop",
+    "build": "npm run build --workspace=apps/desktop",
+    "lint": "npm run lint --workspace=apps/desktop",
+    "typecheck": "npm run typecheck --workspace=apps/desktop"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ]
+}
