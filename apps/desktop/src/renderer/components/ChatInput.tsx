@@ -1,11 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../stores/appStore';
-import { Send, Camera, Scan, FileText, HelpCircle, PenLine } from 'lucide-react';
+import { ArrowUp, Camera, Scan, FileText, HelpCircle, PenLine } from 'lucide-react';
+
+const QUICK_ACTIONS = [
+  { action: 'analyze' as const, icon: Scan, label: 'Analyze' },
+  { action: 'summarize' as const, icon: FileText, label: 'Summarize' },
+  { action: 'explain' as const, icon: HelpCircle, label: 'Explain' },
+  { action: 'draft' as const, icon: PenLine, label: 'Draft' },
+];
 
 export default function ChatInput() {
   const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { sendMessage, isStreaming, captureScreen, lastCapture, analyzeScreen } = useAppStore();
+  const { sendMessage, isStreaming, captureScreen, lastCapture, analyzeScreen, askSeq } =
+    useAppStore();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -13,6 +21,11 @@ export default function ChatInput() {
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
     }
   }, [input]);
+
+  // Grab focus whenever "Ask AI" (⌘↵) is invoked.
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, [askSeq]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -30,87 +43,64 @@ export default function ChatInput() {
 
   const handleCaptureAndAnalyze = async (action: 'analyze' | 'summarize' | 'explain' | 'draft') => {
     let capture = lastCapture;
-    if (!capture) {
-      capture = await captureScreen();
-    }
-    if (capture) {
-      await analyzeScreen(capture, action);
-    }
+    if (!capture) capture = await captureScreen();
+    if (capture) await analyzeScreen(capture, action);
   };
 
+  const pill =
+    'no-drag flex items-center gap-1.5 rounded-full bg-white/[0.06] px-2.5 py-1 text-[11px] text-white/60 transition-colors hover:bg-white/10 hover:text-white/90 disabled:opacity-40';
+
   return (
-    <div className="border-t border-surface-700/50 bg-surface-800/30 p-3 space-y-2">
-      {/* Quick action buttons */}
-      <div className="flex gap-1.5 flex-wrap">
-        <button
-          onClick={() => captureScreen()}
-          disabled={isStreaming}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-surface-700/50 text-surface-200 hover:bg-surface-700 transition-colors disabled:opacity-40"
-        >
-          <Camera size={11} /> Capture Screen
+    <div className="border-t border-white/[0.07] p-3">
+      {/* Quick actions */}
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        <button onClick={() => captureScreen()} disabled={isStreaming} className={pill}>
+          <Camera size={12} /> Capture
         </button>
-        <button
-          onClick={() => handleCaptureAndAnalyze('analyze')}
-          disabled={isStreaming}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-surface-700/50 text-surface-200 hover:bg-surface-700 transition-colors disabled:opacity-40"
-        >
-          <Scan size={11} /> Analyze
-        </button>
-        <button
-          onClick={() => handleCaptureAndAnalyze('summarize')}
-          disabled={isStreaming}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-surface-700/50 text-surface-200 hover:bg-surface-700 transition-colors disabled:opacity-40"
-        >
-          <FileText size={11} /> Summarize
-        </button>
-        <button
-          onClick={() => handleCaptureAndAnalyze('explain')}
-          disabled={isStreaming}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-surface-700/50 text-surface-200 hover:bg-surface-700 transition-colors disabled:opacity-40"
-        >
-          <HelpCircle size={11} /> Explain
-        </button>
-        <button
-          onClick={() => handleCaptureAndAnalyze('draft')}
-          disabled={isStreaming}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-surface-700/50 text-surface-200 hover:bg-surface-700 transition-colors disabled:opacity-40"
-        >
-          <PenLine size={11} /> Draft Response
-        </button>
+        {QUICK_ACTIONS.map(({ action, icon: Icon, label }) => (
+          <button
+            key={action}
+            onClick={() => handleCaptureAndAnalyze(action)}
+            disabled={isStreaming}
+            className={pill}
+          >
+            <Icon size={12} /> {label}
+          </button>
+        ))}
       </div>
 
       {/* Screenshot preview */}
       {lastCapture && (
-        <div className="relative">
+        <div className="relative mb-2">
           <img
             src={lastCapture.imageDataUrl}
             alt="Last capture"
-            className="w-full h-16 object-contain rounded border border-surface-700/50 bg-black"
+            className="h-16 w-full rounded-lg border border-white/10 bg-black object-contain"
           />
-          <div className="absolute top-0.5 right-0.5 bg-surface-900/80 text-[10px] text-surface-200 px-1.5 py-0.5 rounded">
-            {lastCapture.extractedText.length} chars extracted
+          <div className="absolute right-1 top-1 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] text-white/70">
+            {lastCapture.extractedText.length} chars
           </div>
         </div>
       )}
 
-      {/* Text input */}
-      <div className="flex items-end gap-2">
+      {/* Input */}
+      <div className="no-drag flex items-end gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 focus-within:border-white/20">
         <textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isStreaming ? 'AI is responding...' : 'Ask anything...'}
+          placeholder={isStreaming ? 'Thinking…' : 'Ask anything…'}
           disabled={isStreaming}
           rows={1}
-          className="flex-1 bg-surface-700/50 border border-surface-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder-surface-200/40 resize-none focus:outline-none focus:border-accent-500/50 disabled:opacity-50"
+          className="flex-1 resize-none bg-transparent text-[13px] text-white/90 placeholder-white/35 focus:outline-none disabled:opacity-50"
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || isStreaming}
-          className="p-2 rounded-lg bg-accent-500 text-white hover:bg-accent-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 text-black transition-colors hover:bg-white disabled:bg-white/15 disabled:text-white/40"
         >
-          <Send size={16} />
+          <ArrowUp size={15} strokeWidth={2.5} />
         </button>
       </div>
     </div>

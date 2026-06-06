@@ -13,11 +13,15 @@ export const DEFAULT_SETTINGS: AppSettings = {
   globalHotkey: 'CommandOrControl+Shift+Space',
   theme: 'dark',
   localOnlyMode: false,
+  stealthMode: true,
+  transcriptionApiKey: '',
+  transcriptionModel: 'whisper-1',
   allowlist: [],
   blocklist: [],
 };
 
 export const SUPPORTED_MODELS = {
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+  anthropic: ['claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5'],
   ollama: ['llama3', 'llama3:8b', 'mistral', 'codellama', 'phi3'],
 };

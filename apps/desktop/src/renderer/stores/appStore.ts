@@ -1,14 +1,34 @@
 import { create } from 'zustand';
-import type { AppSettings, CaptureResult, CaptureStatus, ChatMessage, ContextPayload } from '@copilot/shared';
+import type {
+  AppSettings,
+  CaptureResult,
+  CaptureStatus,
+  ChatMessage,
+  ContextPayload,
+  TranscriptSegment,
+} from '@copilot/shared';
 import { DEFAULT_SETTINGS } from '@copilot/shared';
 import { v4 as uuid } from 'uuid';
 
 type Page = 'chat' | 'privacy' | 'settings' | 'sessions';
 
+// Held outside the store (not serializable): tears down the active audio capture.
+let captureStop: (() => void) | null = null;
+
 interface AppState {
   // Navigation
   page: Page;
   setPage: (page: Page) => void;
+
+  // Panel (the surface that drops below the command bar)
+  panelOpen: boolean;
+  openPanel: (page?: Page) => void;
+  closePanel: () => void;
+  togglePanel: (page: Page) => void;
+
+  // "Ask AI" — bumps a counter the chat input watches to grab focus.
+  askSeq: number;
+  focusAsk: () => void;
 
   // Settings
   settings: AppSettings;
@@ -44,6 +64,15 @@ interface AppState {
   deleteSession: (id: string) => Promise<void>;
   loadSession: (id: string) => Promise<void>;
 
+  // Audio transcription ("Listen")
+  listening: boolean;
+  transcript: TranscriptSegment[];
+  audioError: string | null;
+  startListening: () => Promise<void>;
+  stopListening: () => void;
+  clearTranscript: () => void;
+  askAboutTranscript: () => Promise<void>;
+
   // Send message to AI
   sendMessage: (content: string) => Promise<void>;
   analyzeScreen: (captureResult: CaptureResult, action: 'analyze' | 'summarize' | 'explain' | 'draft') => Promise<void>;
@@ -56,6 +85,15 @@ function estimateTokens(text: string): number {
 export const useAppStore = create<AppState>((set, get) => ({
   page: 'chat',
   setPage: (page) => set({ page }),
+
+  panelOpen: false,
+  openPanel: (page) => set((s) => ({ panelOpen: true, page: page ?? s.page })),
+  closePanel: () => set({ panelOpen: false }),
+  togglePanel: (page) =>
+    set((s) => (s.panelOpen && s.page === page ? { panelOpen: false } : { panelOpen: true, page })),
+
+  askSeq: 0,
+  focusAsk: () => set((s) => ({ panelOpen: true, page: 'chat', askSeq: s.askSeq + 1 })),
 
   settings: { ...DEFAULT_SETTINGS },
   loadSettings: async () => {
@@ -139,6 +177,40 @@ export const useAppStore = create<AppState>((set, get) => ({
       tokenCount: m.token_count ?? undefined,
     }));
     set({ currentSessionId: id, messages: msgs, lastCapture: null, contextPayload: null, contextApproved: false });
+  },
+
+  listening: false,
+  transcript: [],
+  audioError: null,
+  startListening: async () => {
+    if (get().listening) return;
+    set({ listening: true, audioError: null });
+    const { startCapture } = await import('../lib/audioCapture');
+    captureStop = await startCapture({
+      sources: ['mic', 'system'],
+      onSegment: ({ source, text }) => {
+        if (!text.trim()) return;
+        set((s) => ({
+          transcript: [...s.transcript, { id: uuid(), source, text, timestamp: Date.now() }],
+        }));
+      },
+      onError: (message) => set({ audioError: message }),
+    });
+  },
+  stopListening: () => {
+    captureStop?.();
+    captureStop = null;
+    set({ listening: false });
+  },
+  clearTranscript: () => set({ transcript: [], audioError: null }),
+  askAboutTranscript: async () => {
+    const lines = get()
+      .transcript.map((s) => `${s.source === 'mic' ? 'Me' : 'Them'}: ${s.text}`)
+      .join('\n');
+    if (!lines.trim()) return;
+    set({ panelOpen: true, page: 'chat' });
+    const content = `Here is a live transcript of a conversation. Summarize the key points and suggest a helpful response or next step.\n\n---\n${lines}\n---`;
+    await get().sendMessage(content);
   },
 
   sendMessage: async (content) => {
@@ -249,6 +321,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       isLocal: settings.provider.type === 'ollama',
       userPrompt: prompts[action],
     };
-    set({ contextPayload: payload, contextApproved: false, page: 'chat' });
+    set({ contextPayload: payload, contextApproved: false, page: 'chat', panelOpen: true });
   },
 }));

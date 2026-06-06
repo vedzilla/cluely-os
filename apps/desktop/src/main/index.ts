@@ -1,7 +1,8 @@
-import { app, BrowserWindow, globalShortcut, ipcMain, desktopCapturer, screen, Tray, Menu, nativeImage } from 'electron';
+import { app, BrowserWindow, globalShortcut, ipcMain, desktopCapturer, screen, session, Tray, Menu, nativeImage } from 'electron';
 import path from 'node:path';
 import { initDatabase, getDatabase } from './database';
 import { handleAIChat } from './ai-provider';
+import { transcribeChunk } from './transcribe';
 import { performOCR } from './ocr';
 import { IPC } from '@copilot/shared';
 import type { AppSettings, CaptureResult } from '@copilot/shared';
@@ -15,19 +16,27 @@ let currentSettings: AppSettings = { ...DEFAULT_SETTINGS };
 const DIST = path.join(__dirname, '..');
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
+// Overlay window geometry — a Cluely-style bar pinned to the top-center.
+// The window collapses to just the bar and grows downward when a panel opens.
+const WINDOW_WIDTH = 760;
+const COLLAPSED_HEIGHT = 84;
+const TOP_MARGIN = 28;
+
 function createWindow() {
-  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
 
   mainWindow = new BrowserWindow({
-    width: 420,
-    height: 700,
-    x: screenWidth - 440,
-    y: 60,
+    width: WINDOW_WIDTH,
+    height: COLLAPSED_HEIGHT,
+    x: Math.round((screenWidth - WINDOW_WIDTH) / 2),
+    y: TOP_MARGIN,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    resizable: true,
-    skipTaskbar: false,
+    resizable: false,
+    movable: true,
+    skipTaskbar: true,
+    hasShadow: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -35,12 +44,30 @@ function createWindow() {
     },
   });
 
+  // Float above full-screen apps and on every workspace, like Cluely.
+  mainWindow.setAlwaysOnTop(true, 'screen-saver');
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  // Stealth: exclude the window from screen capture / screen sharing (macOS + Windows).
+  mainWindow.setContentProtection(currentSettings.stealthMode);
 
   if (VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
     mainWindow.loadFile(path.join(DIST, '../dist/index.html'));
+  }
+
+  // Surface renderer failures in the main process log instead of failing silently
+  // (a crashed renderer leaves the transparent window blank, i.e. invisible).
+  mainWindow.webContents.on('did-fail-load', (_e, code, desc) => {
+    console.error('[did-fail-load]', code, desc);
+  });
+  mainWindow.webContents.on('render-process-gone', (_e, details) => {
+    console.error('[render-process-gone]', details.reason);
+  });
+  if (VITE_DEV_SERVER_URL) {
+    mainWindow.webContents.on('console-message', (_e, _level, message) => {
+      console.log('[renderer]', message);
+    });
   }
 
   mainWindow.on('closed', () => {
@@ -53,7 +80,7 @@ function createTray() {
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABhSURBVFhH7c0xAQAgDACxs/kXoGNhICkI6O5Z83t+B0ABUAAUAAVAAVAAFAAFQAFQABQABUABUAAUAAVAAVAAFAAFQAFQABQABUABUAAUAAVAAVAAFAAFQAFQABQArZk9OQEE5XYxHgAAAABJRU5ErkJggg=='
   );
   tray = new Tray(icon);
-  tray.setToolTip('AI Copilot');
+  tray.setToolTip('Cluely OS');
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: 'Show/Hide', click: () => toggleWindow() },
@@ -155,6 +182,7 @@ function setupIPC() {
     currentSettings = settings;
     db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('app_settings', JSON.stringify(settings));
     registerGlobalHotkey();
+    mainWindow?.setContentProtection(settings.stealthMode);
     return true;
   });
 
@@ -222,13 +250,52 @@ function setupIPC() {
     return true;
   });
 
+  // Audio transcription (OpenAI Whisper) — one short chunk at a time
+  ipcMain.handle(
+    IPC.AUDIO_TRANSCRIBE,
+    async (_event, { audio, mimeType }: { audio: Uint8Array; mimeType: string }) => {
+      try {
+        // Use the dedicated transcription key if set; otherwise fall back to the
+        // chat provider's key when that provider is OpenAI — so a single OpenAI
+        // key can power both chat and Whisper.
+        const key =
+          currentSettings.transcriptionApiKey ||
+          (currentSettings.provider.type === 'openai' ? currentSettings.provider.apiKey ?? '' : '');
+        const text = await transcribeChunk(audio, mimeType, key, currentSettings.transcriptionModel);
+        return { success: true, text };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        return { success: false, error: message };
+      }
+    }
+  );
+
   // Window controls
   ipcMain.on(IPC.WINDOW_TOGGLE, () => toggleWindow());
   ipcMain.on(IPC.WINDOW_MINIMIZE, () => mainWindow?.minimize());
+  ipcMain.on(IPC.WINDOW_RESIZE, (_event, height: number) => {
+    if (!mainWindow) return;
+    const target = Math.max(COLLAPSED_HEIGHT, Math.round(height));
+    const [width] = mainWindow.getSize();
+    // Anchor to the top edge so the bar stays put and the panel grows downward.
+    mainWindow.setBounds({ height: target, width }, false);
+  });
 }
 
 app.whenReady().then(() => {
   initDatabase();
+
+  // Allow the renderer's getDisplayMedia() to capture the screen + system audio
+  // (macOS uses ScreenCaptureKit loopback). Without a handler, getDisplayMedia rejects.
+  session.defaultSession.setDisplayMediaRequestHandler(
+    (_request, callback) => {
+      desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+        callback(sources.length ? { video: sources[0], audio: 'loopback' } : {});
+      });
+    },
+    { useSystemPicker: false }
+  );
+
   createWindow();
   createTray();
   registerGlobalHotkey();

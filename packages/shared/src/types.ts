@@ -10,7 +10,7 @@ export interface CaptureResult {
 }
 
 // ── AI Provider ──────────────────────────────────────────
-export type AIProviderType = 'openai' | 'ollama';
+export type AIProviderType = 'openai' | 'anthropic' | 'ollama';
 
 export interface AIProviderConfig {
   type: AIProviderType;
@@ -25,6 +25,16 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   tokenCount?: number;
+}
+
+// ── Audio Transcription ──────────────────────────────────
+export type TranscriptSource = 'mic' | 'system';
+
+export interface TranscriptSegment {
+  id: string;
+  source: TranscriptSource;   // 'mic' = you, 'system' = screen/other side
+  text: string;
+  timestamp: number;
 }
 
 export interface ChatSession {
@@ -56,6 +66,9 @@ export interface AppSettings {
   globalHotkey: string;
   theme: 'light' | 'dark';
   localOnlyMode: boolean;
+  stealthMode: boolean;        // hide the window from screen capture / screen sharing
+  transcriptionApiKey: string; // OpenAI key for Whisper (separate from the chat provider)
+  transcriptionModel: string;  // e.g. 'whisper-1'
   allowlist: string[];
   blocklist: string[];
 }
@@ -82,6 +95,8 @@ export const IPC = {
   DB_DELETE_CAPTURES: 'db:delete-captures',
   WINDOW_TOGGLE: 'window:toggle',
   WINDOW_MINIMIZE: 'window:minimize',
+  WINDOW_RESIZE: 'window:resize',
+  AUDIO_TRANSCRIBE: 'audio:transcribe',
   APP_STATUS: 'app:status',
 } as const;
 

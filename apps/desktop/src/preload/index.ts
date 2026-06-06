@@ -66,9 +66,14 @@ const api = {
   deleteCaptures: (): Promise<boolean> =>
     ipcRenderer.invoke(IPC.DB_DELETE_CAPTURES),
 
+  // Audio transcription
+  transcribeAudio: (audio: Uint8Array, mimeType: string): Promise<{ success: boolean; text?: string; error?: string }> =>
+    ipcRenderer.invoke(IPC.AUDIO_TRANSCRIBE, { audio, mimeType }),
+
   // Window
   toggleWindow: () => ipcRenderer.send(IPC.WINDOW_TOGGLE),
   minimizeWindow: () => ipcRenderer.send(IPC.WINDOW_MINIMIZE),
+  resizeWindow: (height: number) => ipcRenderer.send(IPC.WINDOW_RESIZE, height),
 };
 
 export type ElectronAPI = typeof api;

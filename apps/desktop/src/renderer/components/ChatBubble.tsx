@@ -1,5 +1,4 @@
 import type { ChatMessage } from '@copilot/shared';
-import { User, Bot } from 'lucide-react';
 
 interface Props {
   message: ChatMessage;
@@ -8,23 +7,26 @@ interface Props {
 export default function ChatBubble({ message }: Props) {
   const isUser = message.role === 'user';
 
+  if (isUser) {
+    return (
+      <div className="flex justify-end">
+        <div
+          data-selectable
+          className="max-w-[82%] rounded-2xl rounded-br-md bg-white/10 px-3.5 py-2 text-[13px] leading-relaxed text-white/90"
+        >
+          <div className="whitespace-pre-wrap break-words">{message.content}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Assistant answers read like a document — full width, no bubble.
   return (
-    <div className={`flex gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${
-        isUser ? 'bg-accent-500/20' : 'bg-emerald-500/20'
-      }`}>
-        {isUser ? <User size={14} className="text-accent-400" /> : <Bot size={14} className="text-emerald-400" />}
-      </div>
-      <div className={`flex-1 max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
-        isUser
-          ? 'bg-accent-500/20 text-white'
-          : 'bg-surface-800/80 text-surface-100'
-      }`}>
-        <div className="whitespace-pre-wrap break-words">{message.content}</div>
-        {message.tokenCount !== undefined && (
-          <div className="text-[10px] text-surface-200/30 mt-1">~{message.tokenCount} tokens</div>
-        )}
-      </div>
+    <div data-selectable className="text-[13px] leading-relaxed text-white/85">
+      <div className="whitespace-pre-wrap break-words">{message.content}</div>
+      {message.tokenCount !== undefined && (
+        <div className="mt-1.5 text-[10px] text-white/25">~{message.tokenCount} tokens</div>
+      )}
     </div>
   );
 }
